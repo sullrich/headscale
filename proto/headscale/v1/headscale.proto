@@ -106,6 +106,12 @@ service HeadscaleService {
         };
     }
 
+    rpc SetIpAddr(SetIpAddrMachineRequest) returns (SetIpAddrMachineResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/machine/{machine_id}/setipaddr/{ipaddress}"
+        };
+    }
+
     rpc RenameMachine(RenameMachineRequest) returns (RenameMachineResponse) {
         option (google.api.http) = {
             post: "/api/v1/machine/{machine_id}/rename/{new_name}"

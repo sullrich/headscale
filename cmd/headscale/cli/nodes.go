@@ -18,13 +18,20 @@ import (
 )
 
 func init() {
+	setipaddrNodeCmd.Flags().Uint64P("identifier", "i", 0, "Node identifier (ID)")
+	err := setipaddrNodeCmd.MarkFlagRequired("identifier")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	nodeCmd.AddCommand(setipaddrNodeCmd)
+
 	rootCmd.AddCommand(nodeCmd)
 	listNodesCmd.Flags().StringP("namespace", "n", "", "Filter by namespace")
 	listNodesCmd.Flags().BoolP("tags", "t", false, "Show tags")
 	nodeCmd.AddCommand(listNodesCmd)
 
 	registerNodeCmd.Flags().StringP("namespace", "n", "", "Namespace")
-	err := registerNodeCmd.MarkFlagRequired("namespace")
+	err = registerNodeCmd.MarkFlagRequired("namespace")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
@@ -246,6 +253,54 @@ var expireNodeCmd = &cobra.Command{
 		}
 
 		SuccessOutput(response.Machine, "Machine expired", output)
+	},
+}
+
+var setipaddrNodeCmd = &cobra.Command{
+	Use:   "ipaddr NEW_IPADDRESS",
+	Short: "Changes the IP address for a machine in your network",
+	Run: func(cmd *cobra.Command, args []string) {
+		output, _ := cmd.Flags().GetString("output")
+
+		identifier, err := cmd.Flags().GetUint64("identifier")
+		if err != nil {
+			ErrorOutput(
+				err,
+				fmt.Sprintf("Error converting ID to integer: %s", err),
+				output,
+			)
+
+			return
+		}
+
+		ctx, client, conn, cancel := getHeadscaleCLIClient()
+		defer cancel()
+		defer conn.Close()
+
+		ipaddress := ""
+		if len(args) > 0 {
+			ipaddress = args[0]
+		}
+		request := &v1.SetIpAddrMachineRequest{
+			MachineId: identifier,
+			Ipaddress: ipaddress,
+		}
+
+		response, err := client.SetIpAddr(ctx, request)
+		if err != nil {
+			ErrorOutput(
+				err,
+				fmt.Sprintf(
+					"Cannot set IP address for machine: %s\n",
+					status.Convert(err).Message(),
+				),
+				output,
+			)
+
+			return
+		}
+
+		SuccessOutput(response.Machine, "Machine IP address set", output)
 	},
 }
 

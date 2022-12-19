@@ -476,6 +476,20 @@ func (h *Headscale) ExpireMachine(machine *Machine) error {
 	return nil
 }
 
+// SetIpAddr takes a Machine struct and sets a new IP Address
+func (h *Headscale) SetIpAddr(machine *Machine, ipaddr string) error {
+
+	machine.IPAddresses = []netip.Addr{netip.MustParseAddr(ipaddr)}
+
+	h.setLastStateChangeToNow()
+
+	if err := h.db.Save(machine).Error; err != nil {
+		return fmt.Errorf("failed to set ip address in the database: %w", err)
+	}
+
+	return nil
+}
+
 // RenameMachine takes a Machine struct and a new GivenName for the machines
 // and renames it.
 func (h *Headscale) RenameMachine(machine *Machine, newName string) error {

@@ -283,6 +283,31 @@ func (api headscaleV1APIServer) ExpireMachine(
 	return &v1.ExpireMachineResponse{Machine: machine.toProto()}, nil
 }
 
+func (api headscaleV1APIServer) SetIpAddr(
+	ctx context.Context,
+	request *v1.SetIpAddrMachineRequest,
+) (*v1.SetIpAddrMachineResponse, error) {
+	machine, err := api.h.GetMachineByID(request.GetMachineId())
+	if err != nil {
+		return nil, err
+	}
+
+	err = api.h.SetIpAddr(
+		machine,
+		request.GetIpaddress(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Trace().
+		Str("machine", machine.Hostname).
+		Str("ipaddress", request.GetIpaddress()).
+		Msg("machine ip address set")
+
+	return &v1.SetIpAddrMachineResponse{Machine: machine.toProto()}, nil
+}
+
 func (api headscaleV1APIServer) RenameMachine(
 	ctx context.Context,
 	request *v1.RenameMachineRequest,

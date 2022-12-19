@@ -124,3 +124,12 @@ message DebugCreateMachineRequest {
 message DebugCreateMachineResponse {
     Machine machine = 1;
 }
+
+message SetIpAddrMachineRequest {
+    uint64 machine_id =   1;
+    string ipaddress =    2;
+}
+
+message SetIpAddrMachineResponse {
+    Machine machine = 1;
+}
