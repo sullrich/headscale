@@ -39,6 +39,7 @@ type HeadscaleServiceClient interface {
 	RegisterMachine(ctx context.Context, in *RegisterMachineRequest, opts ...grpc.CallOption) (*RegisterMachineResponse, error)
 	DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error)
 	ExpireMachine(ctx context.Context, in *ExpireMachineRequest, opts ...grpc.CallOption) (*ExpireMachineResponse, error)
+	SetIpAddr(ctx context.Context, in *SetIpAddrMachineRequest, opts ...grpc.CallOption) (*SetIpAddrMachineResponse, error)
 	RenameMachine(ctx context.Context, in *RenameMachineRequest, opts ...grpc.CallOption) (*RenameMachineResponse, error)
 	ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error)
 	MoveMachine(ctx context.Context, in *MoveMachineRequest, opts ...grpc.CallOption) (*MoveMachineResponse, error)
@@ -187,6 +188,15 @@ func (c *headscaleServiceClient) ExpireMachine(ctx context.Context, in *ExpireMa
 	return out, nil
 }
 
+func (c *headscaleServiceClient) SetIpAddr(ctx context.Context, in *SetIpAddrMachineRequest, opts ...grpc.CallOption) (*SetIpAddrMachineResponse, error) {
+	out := new(SetIpAddrMachineResponse)
+	err := c.cc.Invoke(ctx, "/headscale.v1.HeadscaleService/SetIpAddr", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *headscaleServiceClient) RenameMachine(ctx context.Context, in *RenameMachineRequest, opts ...grpc.CallOption) (*RenameMachineResponse, error) {
 	out := new(RenameMachineResponse)
 	err := c.cc.Invoke(ctx, "/headscale.v1.HeadscaleService/RenameMachine", in, out, opts...)
@@ -298,6 +308,7 @@ type HeadscaleServiceServer interface {
 	RegisterMachine(context.Context, *RegisterMachineRequest) (*RegisterMachineResponse, error)
 	DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error)
 	ExpireMachine(context.Context, *ExpireMachineRequest) (*ExpireMachineResponse, error)
+	SetIpAddr(context.Context, *SetIpAddrMachineRequest) (*SetIpAddrMachineResponse, error)
 	RenameMachine(context.Context, *RenameMachineRequest) (*RenameMachineResponse, error)
 	ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error)
 	MoveMachine(context.Context, *MoveMachineRequest) (*MoveMachineResponse, error)
@@ -358,6 +369,9 @@ func (UnimplementedHeadscaleServiceServer) DeleteMachine(context.Context, *Delet
 }
 func (UnimplementedHeadscaleServiceServer) ExpireMachine(context.Context, *ExpireMachineRequest) (*ExpireMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExpireMachine not implemented")
+}
+func (UnimplementedHeadscaleServiceServer) SetIpAddr(context.Context, *SetIpAddrMachineRequest) (*SetIpAddrMachineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetIpAddr not implemented")
 }
 func (UnimplementedHeadscaleServiceServer) RenameMachine(context.Context, *RenameMachineRequest) (*RenameMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RenameMachine not implemented")
@@ -654,6 +668,24 @@ func _HeadscaleService_ExpireMachine_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _HeadscaleService_SetIpAddr_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetIpAddrMachineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HeadscaleServiceServer).SetIpAddr(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/headscale.v1.HeadscaleService/SetIpAddr",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HeadscaleServiceServer).SetIpAddr(ctx, req.(*SetIpAddrMachineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _HeadscaleService_RenameMachine_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RenameMachineRequest)
 	if err := dec(in); err != nil {
@@ -896,6 +928,10 @@ var HeadscaleService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ExpireMachine",
 			Handler:    _HeadscaleService_ExpireMachine_Handler,
+		},
+		{
+			MethodName: "SetIpAddr",
+			Handler:    _HeadscaleService_SetIpAddr_Handler,
 		},
 		{
 			MethodName: "RenameMachine",

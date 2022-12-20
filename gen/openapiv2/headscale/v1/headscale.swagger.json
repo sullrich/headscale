@@ -396,6 +396,43 @@
         ]
       }
     },
+    "/api/v1/machine/{machineId}/setipaddr/{ipaddress}": {
+      "post": {
+        "operationId": "HeadscaleService_SetIpAddr",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SetIpAddrMachineResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "machineId",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "ipaddress",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "HeadscaleService"
+        ]
+      }
+    },
     "/api/v1/machine/{machineId}/tags": {
       "post": {
         "operationId": "HeadscaleService_SetTags",
@@ -1244,6 +1281,14 @@
         "deletedAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "v1SetIpAddrMachineResponse": {
+      "type": "object",
+      "properties": {
+        "machine": {
+          "$ref": "#/definitions/v1Machine"
         }
       }
     },
