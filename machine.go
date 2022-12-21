@@ -1067,6 +1067,7 @@ func (h *Headscale) EnableRoutes(machine *Machine, routeStrs ...string) error {
 	}
 
 	h.setLastStateChangeToNow()
+
 	return nil
 }
 
