@@ -18,12 +18,12 @@ import (
 )
 
 func init() {
-	setipaddrNodeCmd.Flags().Uint64P("identifier", "i", 0, "Node identifier (ID)")
-	err := setipaddrNodeCmd.MarkFlagRequired("identifier")
+	setIPAddrNodeCmd.Flags().Uint64P("identifier", "i", 0, "Node identifier (ID)")
+	err := setIPAddrNodeCmd.MarkFlagRequired("identifier")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	nodeCmd.AddCommand(setipaddrNodeCmd)
+	nodeCmd.AddCommand(setIPAddrNodeCmd)
 
 	rootCmd.AddCommand(nodeCmd)
 	listNodesCmd.Flags().StringP("namespace", "n", "", "Filter by namespace")
@@ -256,13 +256,14 @@ var expireNodeCmd = &cobra.Command{
 	},
 }
 
-var setipaddrNodeCmd = &cobra.Command{
-	Use:   "ipaddr NEW_IPADDRESS",
+var setIPAddrNodeCmd = &cobra.Command{
+	Use:   "ip NEW_IPADDRESS",
 	Short: "Changes the IP address for a machine in your network",
 	Run: func(cmd *cobra.Command, args []string) {
 		output, _ := cmd.Flags().GetString("output")
 
 		identifier, err := cmd.Flags().GetUint64("identifier")
+
 		if err != nil {
 			ErrorOutput(
 				err,
@@ -273,14 +274,26 @@ var setipaddrNodeCmd = &cobra.Command{
 			return
 		}
 
-		ctx, client, conn, cancel := getHeadscaleCLIClient()
-		defer cancel()
-		defer conn.Close()
-
 		ipaddress := ""
 		if len(args) > 0 {
 			ipaddress = args[0]
 		}
+
+		err = isIpInUse(ipaddress)
+		if err != nil {
+			ErrorOutput(
+				err,
+				fmt.Sprintf("Error: %s", err),
+				output,
+			)
+
+			return
+		}
+
+		ctx, client, conn, cancel := getHeadscaleCLIClient()
+		defer cancel()
+		defer conn.Close()
+
 		request := &v1.SetIpAddrMachineRequest{
 			MachineId: identifier,
 			Ipaddress: ipaddress,
@@ -513,6 +526,41 @@ var moveNodeCmd = &cobra.Command{
 
 		SuccessOutput(moveResponse.Machine, "Node moved to another namespace", output)
 	},
+}
+
+func isIpInUse(ipaddress string) error {
+	ctx, client, conn, cancel := getHeadscaleCLIClient()
+	defer cancel()
+	defer conn.Close()
+
+	request := &v1.ListMachinesRequest{}
+
+	response, err := client.ListMachines(ctx, request)
+	if err != nil {
+		return fmt.Errorf("Cannot query client.ListMachines")
+	}
+
+	for _, machine := range response.Machines {
+		for _, addr := range machine.IpAddresses {
+			// we cannot compare strings because ipv6 addresses
+			// might be shortened.  example:
+			// 2001:0db8:85a3:0000:0000:8a2e:0370:7335 ==
+			// 2001:db8:85a3::8a2e:370:7335
+			ipaddress_p, err := netip.ParseAddr(ipaddress)
+			if err != nil {
+				return fmt.Errorf("Invalid IP address")
+			}
+			addr_p, err := netip.ParseAddr(addr)
+			if err != nil {
+				return fmt.Errorf("Invalid IP address")
+			}
+			if ipaddress_p == addr_p {
+				return fmt.Errorf("IP address already in use")
+			}
+		}
+	}
+
+	return nil
 }
 
 func nodesToPtables(

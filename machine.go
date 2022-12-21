@@ -477,9 +477,44 @@ func (h *Headscale) ExpireMachine(machine *Machine) error {
 }
 
 // SetIpAddr takes a Machine struct and sets a new IP Address
+// Replace only the IPV4 or IPV6 address in array by detecting
+// which type of address was passed to the function. If an
+// ipv4 or ipv6 address is passed and type is not present append
 func (h *Headscale) SetIpAddr(machine *Machine, ipaddr string) error {
 
-	machine.IPAddresses = []netip.Addr{netip.MustParseAddr(ipaddr)}
+	newaddr, err := netip.ParseAddr(ipaddr)
+	if err != nil {
+		return fmt.Errorf("Invalid IP address")
+	}
+
+	var addr_type_v4 = netip.MustParseAddr(ipaddr).Is4()
+	var addr_type_v6 = netip.MustParseAddr(ipaddr).Is6()
+
+	var seen_v4 bool = false
+	var seen_v6 bool = false
+
+	var i = 0
+	for i = range machine.IPAddresses {
+		var addr = machine.IPAddresses[i]
+		var addrtmp = addr.String()
+		if netip.MustParseAddr(addrtmp).Is4() {
+			if addr_type_v4 {
+				machine.IPAddresses[i] = newaddr
+				seen_v4 = true
+			}
+		} else {
+			if addr_type_v6 {
+				machine.IPAddresses[i] = newaddr
+				seen_v6 = true
+			}
+		}
+	}
+
+	if addr_type_v4 && seen_v4 == false || addr_type_v6 && seen_v6 == false {
+		machine.IPAddresses = append(machine.IPAddresses, newaddr)
+	}
+
+	machine.IPAddresses = machine.IPAddresses
 
 	h.setLastStateChangeToNow()
 
@@ -689,13 +724,18 @@ func (h *Headscale) toNode(
 		[]netip.Prefix{},
 		addrs...) // we append the node own IP, as it is required by the clients
 
+	enabledRoutes, err := h.GetEnabledRoutes(&machine)
+	if err != nil {
+		return nil, err
+	}
+
+	allowedIPs = append(allowedIPs, enabledRoutes...)
+
 	primaryRoutes, err := h.getMachinePrimaryRoutes(&machine)
 	if err != nil {
 		return nil, err
 	}
 	primaryPrefixes := Routes(primaryRoutes).toPrefixes()
-
-	allowedIPs = append(allowedIPs, primaryPrefixes...)
 
 	var derp string
 	if machine.HostInfo.NetInfo != nil {
@@ -1065,8 +1105,6 @@ func (h *Headscale) EnableRoutes(machine *Machine, routeStrs ...string) error {
 			return fmt.Errorf("failed to find route: %w", err)
 		}
 	}
-
-	h.setLastStateChangeToNow()
 
 	return nil
 }

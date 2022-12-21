@@ -108,7 +108,7 @@ service HeadscaleService {
 
     rpc SetIpAddr(SetIpAddrMachineRequest) returns (SetIpAddrMachineResponse) {
         option (google.api.http) = {
-            post: "/api/v1/machine/{machine_id}/setipaddr/{ipaddress}"
+            post: "/api/v1/machine/{machine_id}/ip/{ipaddress}"
         };
     }
 

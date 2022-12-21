@@ -133,3 +133,4 @@ message SetIpAddrMachineRequest {
 message SetIpAddrMachineResponse {
     Machine machine = 1;
 }
+
