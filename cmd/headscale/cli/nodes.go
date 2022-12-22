@@ -279,17 +279,6 @@ var setIPAddrNodeCmd = &cobra.Command{
 			ipaddress = args[0]
 		}
 
-		err = isIpInUse(ipaddress)
-		if err != nil {
-			ErrorOutput(
-				err,
-				fmt.Sprintf("Error: %s", err),
-				output,
-			)
-
-			return
-		}
-
 		ctx, client, conn, cancel := getHeadscaleCLIClient()
 		defer cancel()
 		defer conn.Close()
@@ -526,41 +515,6 @@ var moveNodeCmd = &cobra.Command{
 
 		SuccessOutput(moveResponse.Machine, "Node moved to another namespace", output)
 	},
-}
-
-func isIpInUse(ipaddress string) error {
-	ctx, client, conn, cancel := getHeadscaleCLIClient()
-	defer cancel()
-	defer conn.Close()
-
-	request := &v1.ListMachinesRequest{}
-
-	response, err := client.ListMachines(ctx, request)
-	if err != nil {
-		return fmt.Errorf("Cannot query client.ListMachines")
-	}
-
-	for _, machine := range response.Machines {
-		for _, addr := range machine.IpAddresses {
-			// we cannot compare strings because ipv6 addresses
-			// might be shortened.  example:
-			// 2001:0db8:85a3:0000:0000:8a2e:0370:7335 ==
-			// 2001:db8:85a3::8a2e:370:7335
-			ipaddress_p, err := netip.ParseAddr(ipaddress)
-			if err != nil {
-				return fmt.Errorf("Invalid IP address")
-			}
-			addr_p, err := netip.ParseAddr(addr)
-			if err != nil {
-				return fmt.Errorf("Invalid IP address")
-			}
-			if ipaddress_p == addr_p {
-				return fmt.Errorf("IP address already in use")
-			}
-		}
-	}
-
-	return nil
 }
 
 func nodesToPtables(

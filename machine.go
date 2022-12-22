@@ -499,7 +499,11 @@ func (h *Headscale) SetIpAddr(machine *Machine, ipaddr string) error {
 	for i = range machine.IPAddresses {
 		var addr = machine.IPAddresses[i]
 		var addrtmp = addr.String()
-		if netip.MustParseAddr(addrtmp).Is4() {
+		addrtmp_p, err := netip.ParseAddr(addrtmp)
+		if err != nil {
+			return fmt.Errorf("Invalid IP address")
+		}
+		if addrtmp_p.Is4() {
 			if addr_type_v4 {
 				machine.IPAddresses[i] = newaddr
 				seen_v4 = true
@@ -518,8 +522,39 @@ func (h *Headscale) SetIpAddr(machine *Machine, ipaddr string) error {
 
 	h.setLastStateChangeToNow()
 
+	err = h.isIpInUse(ipaddr)
+	if err != nil {
+		return fmt.Errorf("IP address already exists")
+	}
+
 	if err := h.db.Save(machine).Error; err != nil {
 		return fmt.Errorf("failed to set ip address in the database: %w", err)
+	}
+
+	return nil
+}
+
+func (h *Headscale) isIpInUse(ipaddress string) error {
+
+	machines, err := h.ListMachines()
+	if err != nil {
+		return fmt.Errorf("Error when calling Listmachines()")
+	}
+
+	for _, machine := range machines {
+		for _, addr := range machine.IPAddresses {
+			// we cannot compare strings because ipv6 addresses
+			// might be shortened.  example:
+			// 2001:0db8:85a3:0000:0000:8a2e:0370:7335 ==
+			// 2001:db8:85a3::8a2e:370:7335
+			ipaddress_p, err := netip.ParseAddr(ipaddress)
+			if err != nil {
+				return fmt.Errorf("Invalid IP address")
+			}
+			if ipaddress_p == addr {
+				return fmt.Errorf("IP address already in use")
+			}
+		}
 	}
 
 	return nil
