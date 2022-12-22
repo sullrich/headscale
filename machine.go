@@ -489,8 +489,8 @@ func (h *Headscale) SetIpAddr(machine *Machine, ipaddr string) error {
 		return fmt.Errorf("Invalid IP address")
 	}
 
-	var addr_type_v4 = netip.MustParseAddr(ipaddr).Is4()
-	var addr_type_v6 = netip.MustParseAddr(ipaddr).Is6()
+	var addr_type_v4 = newaddr.Is4()
+	var addr_type_v6 = newaddr.Is6()
 
 	var seen_v4 bool = false
 	var seen_v6 bool = false
@@ -515,8 +515,6 @@ func (h *Headscale) SetIpAddr(machine *Machine, ipaddr string) error {
 	if addr_type_v4 && seen_v4 == false || addr_type_v6 && seen_v6 == false {
 		machine.IPAddresses = append(machine.IPAddresses, newaddr)
 	}
-
-	machine.IPAddresses = machine.IPAddresses
 
 	h.setLastStateChangeToNow()
 
