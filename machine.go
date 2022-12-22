@@ -534,8 +534,8 @@ func (h *Headscale) SetIpAddr(machine *Machine, ipaddr string) error {
 	return nil
 }
 
+// isIpInUse takes a string and checks if a IP address is in use
 func (h *Headscale) isIpInUse(ipaddress string) error {
-
 	machines, err := h.ListMachines()
 	if err != nil {
 		return fmt.Errorf("Error when calling Listmachines()")
