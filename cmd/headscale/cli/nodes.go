@@ -293,7 +293,7 @@ var setIPAddrNodeCmd = &cobra.Command{
 			ErrorOutput(
 				err,
 				fmt.Sprintf(
-					"Cannot set IP address for machine: %s\n",
+					"Cannot set IP address for machine: %s",
 					status.Convert(err).Message(),
 				),
 				output,

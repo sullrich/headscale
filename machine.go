@@ -524,7 +524,7 @@ func (h *Headscale) SetIpAddr(machine *Machine, ipaddr string) error {
 
 	err = h.isIpInUse(ipaddr)
 	if err != nil {
-		return fmt.Errorf("IP address already exists")
+		return fmt.Errorf("IP address already in use")
 	}
 
 	if err := h.db.Save(machine).Error; err != nil {
