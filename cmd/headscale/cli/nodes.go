@@ -258,7 +258,7 @@ var expireNodeCmd = &cobra.Command{
 
 var setIPAddrNodeCmd = &cobra.Command{
 	Use:   "ip NEW_IPADDRESS",
-	Short: "Changes the IP address for a machine in your network",
+	Short: "Replaces the IPV4 or IPV6 address for a machine in your network",
 	Run: func(cmd *cobra.Command, args []string) {
 		output, _ := cmd.Flags().GetString("output")
 
